@@ -1,0 +1,92 @@
+version: '3.8'
+
+volumes:
+  mysql-volume:
+
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    volumes:
+      - mysql-volume:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass  # Use MYSQL_ROOT_PASSWORD for root user password
+      MYSQL_DATABASE: db
+    ports:
+      - "3306:3306"
+    networks:
+      - app-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: rootpass  # Ensure MYSQL_ROOT_PASSWORD matches MySQL root password
+    ports:
+      - "80:80"
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+  # Other services like app, web, and frontend remain unchanged
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_app
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+      DB_HOST: mysql
+      DB_DATABASE: customer_management
+      DB_USERNAME: root
+      DB_PASSWORD: rootpass
+    working_dir: /var/www
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www
+      - ./vendor:/var/www/vendor
+      - ./storage:/var/www/storage
+    networks:
+      - app-network
+
+  web:
+    image: nginx:alpine
+    container_name: laravel_web
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "90:90"
+    volumes:
+      - .:/var/www
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - app
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ../customer-management-frontend
+      dockerfile: Dockerfile
+    container_name: react_frontend
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../customer-management-frontend:/app
+      - /app/node_modules
+    networks:
+      - app-network
+    environment:
+      REACT_APP_API_URL: http://laravel_app:8000
+
+networks:
+  app-network:
+    driver: bridge
