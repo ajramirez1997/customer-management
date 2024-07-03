@@ -2,44 +2,43 @@ This is the instruction on how to install this project the steps contains of bui
 
 And sorry for the commit I push it all in one commit and put the front and backend in the same repository.
 
-Build Docker Containers:
+**Build Docker Containers:**
 
 Navigate to the customer_management directory containing your docker-compose.yml file.
-Run the following command to build the Docker containers:
-bash
-Copy code
+Run the following command to build the Docker:
+
 docker-compose up --build
 
-Create Database:
+**Create Database:**
 
-Ensure you have MySQL installed locally. Use a MySQL client or terminal to connect to MySQL.
-Run the following SQL commands to create the customer_management database:
-sql
-Copy code
-CREATE DATABASE customer_management;
-Use root as the username and rootpass as the password when prompted.
-Run Migrations and Seed Database:
+Open the localhost or localhost:80 used the credentials of root and rootpass (You can change this in docker-compose.yml for security purposes).
 
-After Docker containers are up and running:
-bash
-Copy code
+Create a database and name it customer_management.
+
+After you create a database run this command to migrate the table and populate the customer table.
+
 docker-compose exec app php artisan migrate
+
 docker-compose exec app php artisan db:seed --class=CustomersTableSeeder
-Generate API Token:
 
-Run the following command to generate a Passport client (API token):
-bash
-Copy code
+
+
+**Generate API Token:**
+
+**Run the following command to generate a Passport client (API token):**
+
 docker-compose exec app php artisan passport:client --client
-Follow the prompts to name the client.
-Retrieve Access Token:
 
-Run php artisan tinker inside the app container:
-bash
-Copy code
+This will ask you what name of the client put any name that you want. And it will give you a client secret key and id it will be used in the next step.
+
+**Run php artisan tinker inside the app container:**
 docker-compose exec app php artisan tinker
+
+This command will open a php shell.
+
 Use the following PHP code snippet to generate and retrieve the access token:
 php
+
 Copy code and run it inside of tinker
 
 use Illuminate\Support\Facades\Http;
@@ -57,6 +56,13 @@ Replace 'client_id_generated' and 'client_secret_generated' with the values obta
 Integrate Access Token with Frontend:
 
 Store the generated access token in the .env file of your frontend application under API_TOKEN.
-Access the Application:
+
+Should be like this
+
+API_TOKEN = Generated Token from PHP Artisan Tinker
+
+**Access the Application:**
 
 Open your web browser and navigate to http://localhost:3000 to access the customer_management application.
+
+Reminder: Dont forget change the .env.example to .env
